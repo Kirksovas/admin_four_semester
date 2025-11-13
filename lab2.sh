@@ -133,11 +133,9 @@ create_backup_with_rotation() {
   source_dir="${source_dir%/}"
   backup_dir="${backup_dir%/}"
   local days_to_keep=7
-  # Проверка на совпадение путей
   if [ "$source_dir" = "$backup_dir" ]; then
     error_exit "Исходная директория и директория для бэкапов не могут совпадать."
   fi
-  # Проверка что backup_dir не находится внутри source_dir
   if [[ "$backup_dir" == "$source_dir"/* ]]; then
     error_exit "Директория для бэкапов не может находиться внутри исходной директории."
   fi
