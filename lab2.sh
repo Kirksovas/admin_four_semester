@@ -180,6 +180,9 @@ create_backup_with_rotation() {
 # ==============================================================================
 # ЗАДАНИЕ 5: АНАЛИЗ ЧАСТОТЫ СЛОВ (Функция)
 # ==============================================================================
+# ==============================================================================
+# ЗАДАНИЕ 5: АНАЛИЗ ЧАСТОТЫ СЛОВ (ИСПРАВЛЕНО + КРАСИВЫЕ СООБЩЕНИЯ)
+# ==============================================================================
 analyze_word_frequency() {
   local search_dir="$1"
   local extension="$2"
@@ -200,10 +203,9 @@ analyze_word_frequency() {
 
   local files
   mapfile -d '' files < <(find "$search_dir" -type f -name "*.$extension" -print0 2>/dev/null)
-  
+
   if [ ${#files[@]} -eq 0 ]; then
-    echo "Ошибка: В директории '$search_dir' нет файлов с расширением '.$extension'"
-    return 1
+    error_exit "В директории '$search_dir' нет файлов с расширением '.$extension'"
   fi
 
   local STOPWORDS_FILE="stopwords.txt"
@@ -221,29 +223,22 @@ analyze_word_frequency() {
   local WORD_FOUND=0
 
   for file in "${files[@]}"; do
-    # Читаем слова: нижний регистр, убираем пунктуацию, только слова
     local words
     words=$(tr '[:upper:]' '[:lower:]' < "$file" 2>/dev/null | tr -d '[:punct:]' | grep -ohE '\w+')
-    
     while read -r word; do
       [[ -z "$word" ]] && continue
       WORD_FOUND=1
-
-      # Пропускаем стоп-слова
       if [ -n "$STOPWORDS_REGEX" ] && [[ "$word" =~ ^($STOPWORDS_REGEX)$ ]]; then
         continue
       fi
-
       ((WORD_COUNT["$word"]++))
     done <<< "$words"
   done
 
   if [ $WORD_FOUND -eq 0 ]; then
-    echo "Ошибка: В файлах с расширением '.$extension' не найдено ни одного слова."
-    return 1
+    error_exit "В файлах с расширением '.$extension' не найдено ни одного слова."
   fi
 
-  # Вывод топ-N
   echo "--- Топ-$top_n самых частых слов ---"
   for word in "${!WORD_COUNT[@]}"; do
     printf '%s: %d\n' "$word" "${WORD_COUNT[$word]}"
